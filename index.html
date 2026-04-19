@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⛩ 勇士競技場</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Caveat:wght@400;700&family=Ma+Shan+Zheng&display=swap');
+
+:root {
+  --bg: #f5f0e8;
+  --bg2: #ede6d8;
+  --bg3: #e3dace;
+  --gold: #c0392b;
+  --gold2: #d44333;
+  --gold3: #e8635a;
+  --red: #c0392b;
+  --red2: #a93226;
+  --olive: #2c3e7a;
+  --olive2: #3a50a0;
+  --dark: #1c1c1c;
+  --dark2: #2e2e2e;
+  --paper: #faf7f2;
+  --ink: #1c1c1c;
+  --border: #c0392b;
+  --shadow: rgba(28,28,28,0.25);
+  --card-bg: #faf7f2;
+  --heart-color: #c0392b;
+  --spade-color: #2c3e7a;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  font-family: 'Noto Serif TC', serif;
+  color: var(--ink);
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at 20% 20%, rgba(192,57,43,0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 80%, rgba(44,62,122,0.08) 0%, transparent 50%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23c0392b' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  overflow-x: hidden;
+}
+.screen { display:none; min-height:100vh; }
+.screen.active { display:flex; flex-direction:column; }
+
+/* LOGIN */
+#loginScreen { align-items:center; justify-content:center; padding:2rem 1rem; }
+.main-title {
+  font-family:'Ma Shan Zheng',cursive;
+  font-size:2.8rem; color:var(--gold);
+  text-shadow:2px 2px 0 #888,-1px -1px 0 #c0392b;
+  line-height:1.2; letter-spacing:0.1em; text-align:center;
+}
+.sub-title {
+  font-family:'Caveat',cursive; font-size:1.1rem;
+  color:#2c3e7a; margin-top:0.5rem; letter-spacing:0.2em; text-align:center;
+}
+.tagline {
+  background:linear-gradient(135deg,#1c1c1c,#c0392b);
+  color:var(--paper); padding:0.8rem 1.5rem; border-radius:8px;
+  font-size:0.85rem; text-align:center; margin:1.5rem 0;
+  max-width:400px; border:2px solid #c0392b; line-height:1.6; font-style:italic;
+}
+.login-box {
+  background:var(--paper); border:3px solid var(--gold); border-radius:12px;
+  padding:2rem; width:100%; max-width:400px;
+  box-shadow:4px 4px 0 var(--dark),inset 0 0 20px rgba(184,134,11,0.1);
+  position:relative;
+}
+.login-box::before {
+  content:'⛩'; position:absolute; top:-18px; left:50%;
+  transform:translateX(-50%); background:var(--bg);
+  padding:0 8px; font-size:1.5rem; color:var(--red);
+}
+.form-group { margin-bottom:1.2rem; }
+.form-group label { display:block; font-size:0.9rem; color:var(--dark2); margin-bottom:0.4rem; font-weight:700; }
+.form-group input {
+  width:100%; padding:0.7rem 1rem; border:2px solid var(--gold); border-radius:6px;
+  background:var(--bg); font-family:'Noto Serif TC',serif; font-size:1rem;
+  color:var(--ink); outline:none; transition:border-color 0.2s;
+}
+.form-group input:focus { border-color:var(--red); box-shadow:0 0 0 3px rgba(139,58,58,0.2); }
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:0.5rem;
+  padding:0.8rem 1.5rem; border:2px solid var(--gold); border-radius:6px;
+  background:linear-gradient(135deg,#c0392b,#2c3e7a); color:var(--paper);
+  font-family:'Noto Serif TC',serif; font-size:1rem; font-weight:700;
+  cursor:pointer; transition:all 0.2s;
+  text-shadow:1px 1px 0 rgba(0,0,0,0.3); box-shadow:2px 2px 0 var(--dark);
+}
+.btn:hover { transform:translate(-1px,-1px); box-shadow:3px 3px 0 var(--dark); }
+.btn:active { transform:translate(1px,1px); box-shadow:1px 1px 0 var(--dark); }
+.btn:disabled { opacity:0.5; cursor:not-allowed; transform:none; }
+.btn.full { width:100%; }
+.btn.red { background:linear-gradient(135deg,#c0392b,#a93226); border-color:#c0392b; }
+.btn.olive { background:linear-gradient(135deg,#2c3e7a,#3a50a0); border-color:#2c3e7a; }
+.btn.sm { font-size:0.85rem; padding:0.5rem 1rem; }
+.btn.ghost { background:transparent; color:var(--gold); box-shadow:none; }
+.rules-btn { display:block; text-align:center; margin-top:1rem; color:var(--olive); font-size:0.85rem; cursor:pointer; text-decoration:underline; font-style:italic; }
+
+/* TEAM SELECT */
+#teamScreen { align-items:center; justify-content:center; padding:2rem 1rem; }
+.team-container { background:var(--paper); border:3px solid var(--gold); border-radius:12px; padding:2rem; width:100%; max-width:500px; box-shadow:4px 4px 0 var(--dark); }
+.screen-title { font-family:'Ma Shan Zheng',cursive; font-size:1.8rem; color:var(--gold); text-align:center; margin-bottom:1.5rem; text-shadow:1px 1px 0 var(--dark); }
+.team-item { display:flex; align-items:center; justify-content:space-between; padding:0.8rem 1rem; border:2px solid var(--gold); border-radius:8px; margin-bottom:0.5rem; background:var(--bg); cursor:pointer; transition:all 0.2s; }
+.team-item:hover { background:var(--bg2); transform:translateX(2px); }
+.divider { text-align:center; color:var(--gold); font-size:0.9rem; margin:1rem 0; position:relative; }
+.divider::before,.divider::after { content:''; position:absolute; top:50%; width:40%; height:1px; background:var(--gold); }
+.divider::before { left:0; } .divider::after { right:0; }
+
+/* GAME HEADER */
+.game-header {
+  background:linear-gradient(135deg,#1c1c1c,#2e2e2e);
+  padding:1rem 1.2rem; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:3px solid var(--gold); position:sticky; top:0; z-index:100;
+}
+.player-avatar {
+  width:40px; height:40px; border-radius:50%;
+  background:linear-gradient(135deg,#c0392b,#2c3e7a);
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; border:2px solid var(--gold3); position:relative;
+}
+.crown-anim { position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-size:1rem; animation:crownSpin 2s infinite; }
+@keyframes crownSpin {
+  0%{transform:translateX(-50%) rotate(-10deg) scale(1);}
+  50%{transform:translateX(-50%) rotate(10deg) scale(1.3);}
+  100%{transform:translateX(-50%) rotate(-10deg) scale(1);}
+}
+.player-name { color:var(--paper); font-weight:700; font-size:0.95rem; }
+.team-badge { background:var(--gold); color:var(--dark); padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:700; }
+.online-dot { display:inline-block; width:8px; height:8px; background:#4caf50; border-radius:50%; margin-left:4px; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.4;} }
+
+/* NAV TABS */
+.nav-tabs { display:flex; background:var(--bg2); border-bottom:2px solid var(--gold); }
+.nav-tab { flex:1; padding:0.8rem; text-align:center; font-size:0.8rem; font-weight:700; cursor:pointer; border:none; background:transparent; color:var(--dark2); font-family:'Noto Serif TC',serif; transition:all 0.2s; }
+.nav-tab.active { background:var(--paper); color:var(--gold); border-bottom:3px solid var(--gold); }
+.tab-count { display:inline-block; background:var(--red); color:var(--paper); border-radius:10px; padding:1px 6px; font-size:0.65rem; margin-left:2px; }
+.tab-content { display:none; padding:1rem; }
+.tab-content.active { display:block; }
+
+/* CARDS */
+.section-title { font-family:'Ma Shan Zheng',cursive; font-size:1.4rem; color:var(--gold); margin-bottom:1rem; text-shadow:1px 1px 0 rgba(0,0,0,0.2); }
+.cards-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:0.8rem; margin-bottom:1.5rem; }
+.playing-card {
+  background:var(--card-bg); border:2px solid var(--border); border-radius:10px;
+  padding:0.6rem; aspect-ratio:2/3; display:flex; flex-direction:column;
+  position:relative; cursor:pointer; transition:all 0.3s;
+  box-shadow:2px 2px 0 var(--shadow),inset 0 0 10px rgba(255,255,255,0.5);
+  user-select:none; overflow:hidden;
+}
+.playing-card::before { content:''; position:absolute; inset:3px; border:1px solid rgba(184,134,11,0.3); border-radius:7px; pointer-events:none; }
+.playing-card.completed { background:linear-gradient(135deg,#e8f5e9,#c8e6c9); border-color:var(--olive); }
+.playing-card.submitted { opacity:0.55; border-color:var(--gold2); }
+.card-corner { position:absolute; font-family:'Caveat',cursive; font-weight:700; font-size:1.1rem; line-height:1; }
+.card-corner.tl { top:5px; left:7px; }
+.card-corner.br { bottom:5px; right:7px; transform:rotate(180deg); }
+.card-suit-big { position:absolute; top:50%; left:50%; transform:translate(-50%,-60%); font-size:2.5rem; opacity:0.12; }
+.card-exercise { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:1.5rem 0.3rem 0.5rem; gap:0.3rem; }
+.exercise-icon { font-size:1.8rem; }
+.exercise-name { font-size:0.65rem; font-weight:700; color:var(--dark); line-height:1.3; }
+.exercise-detail { font-size:0.55rem; color:var(--dark2); line-height:1.4; }
+.card-complete-badge { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%) rotate(-15deg); background:var(--olive); color:var(--paper); padding:3px 10px; font-size:0.7rem; font-weight:700; border-radius:4px; border:1px solid var(--olive2); z-index:2; white-space:nowrap; }
+@keyframes swipeUp { 0%{transform:none;opacity:1} 40%{transform:translateY(-30px) scale(1.05);opacity:0.9} 100%{transform:translateY(-200px) scale(0.4);opacity:0} }
+.swipe-up { animation:swipeUp 0.55s ease forwards; }
+.swipe-hint { text-align:center; font-size:0.8rem; color:var(--dark2); font-style:italic; margin-bottom:1rem; }
+
+/* TEAM PILE */
+.pile-card { display:flex; align-items:center; gap:0.8rem; padding:0.7rem 1rem; background:var(--paper); border:1px solid var(--gold); border-radius:8px; margin-bottom:0.5rem; animation:fadeIn 0.3s ease; }
+.pile-card-symbol { font-family:'Caveat',cursive; font-size:1.3rem; font-weight:700; width:40px; text-align:center; }
+.pile-card-info { flex:1; }
+.pile-card-name { font-weight:700; font-size:0.9rem; }
+.pile-card-meta { font-size:0.75rem; color:var(--dark2); }
+.pile-card-submitter { font-size:0.75rem; color:var(--olive); font-style:italic; }
+
+/* LEADERBOARD */
+.rank-item { display:flex; align-items:center; gap:0.8rem; padding:0.8rem 1rem; background:var(--paper); border:1px solid var(--gold); border-radius:8px; margin-bottom:0.5rem; }
+.rank-num { width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.9rem; flex-shrink:0; }
+.rank-num.gold{background:#e8635a;color:#fff;}
+.rank-num.silver{background:#c0c0c0;color:var(--dark);}
+.rank-num.bronze{background:#cd7f32;color:var(--paper);}
+.rank-num.other{background:var(--bg2);color:var(--dark2);}
+.rank-info { flex:1; }
+.rank-team { font-weight:700; font-size:0.95rem; }
+.rank-hand { font-size:0.75rem; color:var(--dark2); }
+.rank-cards { font-family:'Caveat',cursive; font-size:1rem; color:var(--gold); }
+
+/* CAPTAIN */
+.captain-panel { background:linear-gradient(135deg,rgba(192,57,43,0.08),rgba(44,62,122,0.05)); border:2px solid var(--gold); border-radius:10px; padding:1rem; margin-bottom:1rem; }
+.mini-card { background:var(--card-bg); border:2px solid var(--border); border-radius:6px; padding:0.4rem 0.6rem; font-family:'Caveat',cursive; font-size:1.1rem; font-weight:700; cursor:pointer; transition:all 0.2s; display:inline-block; margin:3px; }
+.mini-card.selected { background:#e8635a; border-color:#c0392b; transform:translateY(-4px); box-shadow:0 4px 0 #1c1c1c; color:#fff; }
+.selected-hand-display { display:flex; flex-wrap:wrap; gap:4px; margin:0.8rem 0; min-height:44px; }
+.hand-rank-info { background:rgba(184,134,11,0.1); border:1px solid var(--gold); border-radius:6px; padding:0.5rem 0.8rem; font-size:0.8rem; color:var(--dark2); margin-top:0.5rem; text-align:center; }
+
+/* TODAY CHALLENGE */
+.today-challenge-section { background:linear-gradient(135deg,rgba(192,57,43,0.12),rgba(44,62,122,0.08)); border:2px solid var(--gold); border-radius:10px; padding:1rem; margin-bottom:1.5rem; }
+.challenge-hand-display { display:flex; gap:0.5rem; justify-content:center; flex-wrap:wrap; margin:0.8rem 0; }
+.challenge-card { background:var(--card-bg); border:2px solid var(--gold); border-radius:6px; padding:0.5rem 0.8rem; font-family:'Caveat',cursive; font-size:1.2rem; font-weight:700; min-width:45px; text-align:center; }
+
+/* MODAL */
+.modal-overlay { position:fixed; inset:0; background:rgba(44,26,14,0.75); z-index:1000; display:none; align-items:center; justify-content:center; padding:1rem; }
+.modal-overlay.active { display:flex; }
+.modal { background:var(--paper); border:3px solid var(--gold); border-radius:12px; padding:2rem; width:100%; max-width:480px; box-shadow:6px 6px 0 var(--dark); max-height:88vh; overflow-y:auto; }
+.modal-title { font-family:'Ma Shan Zheng',cursive; font-size:1.6rem; color:var(--gold); margin-bottom:1.5rem; text-align:center; }
+.rules-section { margin-bottom:1.2rem; }
+.rules-section h3 { font-size:1rem; color:var(--red); margin-bottom:0.4rem; border-bottom:1px solid var(--gold); padding-bottom:0.3rem; }
+.rules-section p,.rules-section li { font-size:0.85rem; line-height:1.7; color:var(--dark2); margin-bottom:0.3rem; }
+.rules-section ul { padding-left:1.2rem; }
+
+/* TOAST */
+.toast { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%) translateY(100px); background:var(--dark); color:var(--gold3); padding:0.8rem 1.5rem; border-radius:8px; border:1px solid var(--gold); font-size:0.9rem; font-weight:700; z-index:9998; transition:transform 0.3s; text-align:center; max-width:300px; }
+.toast.show { transform:translateX(-50%) translateY(0); }
+
+/* FIREWORKS */
+#fw-canvas { position:fixed; inset:0; pointer-events:none; z-index:9999; }
+
+/* LOADER */
+.load-overlay { position:fixed; inset:0; background:var(--dark); z-index:99999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; transition:opacity 0.6s; }
+.load-overlay.out { opacity:0; pointer-events:none; }
+.load-title { font-family:'Ma Shan Zheng',cursive; font-size:3rem; color:var(--gold); text-shadow:0 0 30px rgba(192,57,43,0.5); animation:bounce 1s infinite; }
+.load-spinner { width:40px; height:40px; border:3px solid rgba(184,134,11,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+.load-subtitle { color:var(--bg); font-size:0.9rem; opacity:0.7; }
+@keyframes bounce{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.fade-in { animation:fadeIn 0.35s ease forwards; }
+
+.empty-state { text-align:center; padding:2rem; color:var(--dark2); font-style:italic; font-size:0.9rem; }
+.member-item { display:flex; align-items:center; justify-content:space-between; padding:0.5rem 0.8rem; background:var(--bg); border-radius:6px; margin-bottom:0.3rem; font-size:0.85rem; }
+.realtime-badge { display:inline-flex; align-items:center; gap:4px; background:rgba(76,175,80,0.15); border:1px solid rgba(76,175,80,0.4); border-radius:12px; padding:2px 8px; font-size:0.7rem; color:#2e7d32; }
+
+@media(max-width:380px){
+  .cards-grid{grid-template-columns:repeat(3,1fr);gap:0.4rem;}
+  .nav-tab{font-size:0.7rem;padding:0.6rem 0.2rem;}
+  .main-title{font-size:2.2rem;}
+}
+</style>
+</head>
+<body>
+
+<canvas id="fw-canvas"></canvas>
+<div class="toast" id="toast"></div>
+
+<div class="load-overlay" id="loadOverlay">
+  <div class="load-title">⛩ 勇士競技場 ⛩</div>
+  <div class="load-spinner"></div>
+  <div class="load-subtitle" id="loadMsg">正在連接競技場...</div>
+</div>
+
+<!-- LOGIN -->
+<div class="screen active" id="loginScreen">
+  <div style="width:100%;max-width:420px;margin:0 auto;padding:2rem 1rem;">
+    <div style="margin-bottom:1.5rem;">
+      <div class="main-title">⛩ 勇士競技場 ⛩</div>
+      <div class="sub-title">WARRIOR FITNESS ARENA</div>
+    </div>
+    <div class="tagline">
+      ⚠️ 勇士，你的每一次揮汗，都在拯救這個世界。<br>
+      人類體重日漸沉重，大地正緩緩沒入海底。<br>
+      唯有強壯的你，能守護這片土地。
+    </div>
+    <div class="login-box">
+      <div class="form-group">
+        <label>⚔ 勇士稱號（姓名）</label>
+        <input type="text" id="loginName" placeholder="輸入你的名字" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label>📜 勇士令牌（手機號碼）</label>
+        <input type="tel" id="loginPhone" placeholder="輸入手機號碼" maxlength="15">
+      </div>
+      <button class="btn full" id="loginBtn" onclick="handleLogin()">🗡 進入競技場</button>
+      <span class="rules-btn" onclick="showRules()">📖 規則教學 / 牌型說明</span>
+    </div>
+  </div>
+</div>
+
+<!-- TEAM SELECT -->
+<div class="screen" id="teamScreen">
+  <div style="width:100%;max-width:500px;margin:0 auto;padding:2rem 1rem;">
+    <div class="team-container">
+      <div class="screen-title">⚔ 選擇你的隊伍</div>
+      <p style="font-size:0.85rem;color:var(--dark2);margin-bottom:1rem;text-align:center;">
+        勇士 <strong id="welcomeName"></strong>，請加入或創建隊伍
+      </p>
+      <div id="teamList"><div class="empty-state">載入隊伍中...</div></div>
+      <div class="divider">或</div>
+      <div class="form-group">
+        <label>⚔ 創建新隊伍</label>
+        <input type="text" id="newTeamName" placeholder="輸入隊伍名稱" maxlength="20">
+      </div>
+      <button class="btn full" id="createTeamBtn" onclick="createTeam()">🏰 創建並成為隊長</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <div style="display:flex;align-items:center;gap:0.8rem;">
+      <div class="player-avatar" id="playerAvatar">⚔
+        <span class="crown-anim" id="crownAnim" style="display:none">👑</span>
+      </div>
+      <div>
+        <div class="player-name" id="headerName">勇士</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span class="team-badge" id="headerTeam">隊伍</span>
+          <span class="realtime-badge"><span class="online-dot"></span>即時同步</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:0.5rem;">
+      <button class="btn sm ghost" onclick="refreshAll()">🔄</button>
+      <button class="btn sm red" onclick="logout()">登出</button>
+    </div>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('myCards')">我的卡牌</button>
+    <button class="nav-tab" onclick="switchTab('teamPile')">牌堆<span class="tab-count" id="pileCount">0</span></button>
+    <button class="nav-tab" onclick="switchTab('leaderboard')">排行榜</button>
+    <button class="nav-tab" id="captainTabBtn" style="display:none" onclick="switchTab('captain')">👑隊長</button>
+  </div>
+
+  <!-- MY CARDS -->
+  <div class="tab-content active" id="tab-myCards">
+    <div class="section-title">🃏 今日卡牌任務</div>
+    <p style="font-size:0.8rem;color:var(--dark2);margin-bottom:0.8rem;">完成動作後點擊卡牌 → 再點擊提交到隊伍牌堆</p>
+    <div class="today-challenge-section" id="todayChallengeSection" style="display:none">
+      <div style="font-family:'Ma Shan Zheng',cursive;color:var(--gold);font-size:1.05rem;margin-bottom:0.4rem;">🏆 今日隊長挑戰牌組</div>
+      <div class="challenge-hand-display" id="challengeHandDisplay"></div>
+      <div class="hand-rank-info" id="challengeHandRank"></div>
+    </div>
+    <div class="cards-grid" id="myCardsGrid"><div class="empty-state" style="grid-column:1/-1">載入中...</div></div>
+    <div class="swipe-hint">↑ 先點擊完成動作，再點擊提交到隊伍牌堆</div>
+  </div>
+
+  <!-- TEAM PILE -->
+  <div class="tab-content" id="tab-teamPile">
+    <div class="section-title">🃏 隊伍牌堆</div>
+    <p style="font-size:0.8rem;color:var(--dark2);margin-bottom:1rem;">隊員完成任務後的卡牌匯集處（即時更新）</p>
+    <div id="teamPileList"><div class="empty-state">尚無提交的卡牌</div></div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="tab-content" id="tab-leaderboard">
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+      <button class="btn sm" id="todayRankBtn" onclick="switchLeaderboard('today')" style="flex:1">今日排行</button>
+      <button class="btn sm ghost" id="totalRankBtn" onclick="switchLeaderboard('total')" style="flex:1">累計總榜</button>
+    </div>
+    <div id="leaderboardList"><div class="empty-state">載入中...</div></div>
+  </div>
+
+  <!-- CAPTAIN -->
+  <div class="tab-content" id="tab-captain">
+    <div class="captain-panel">
+      <div class="section-title">👑 隊長指揮所</div>
+      <p style="font-size:0.85rem;color:var(--dark2);margin-bottom:0.8rem;">從牌堆挑選最多5張，發布今日挑戰牌組</p>
+      <div style="font-size:0.9rem;font-weight:700;color:var(--gold)">已選 <span id="selCount">0</span>/5 張</div>
+      <div class="selected-hand-display" id="captainSelDisplay"></div>
+      <div class="hand-rank-info" id="captainHandRank" style="display:none"></div>
+      <div style="display:flex;gap:0.5rem;margin-top:0.8rem;">
+        <button class="btn" onclick="setTodayChallenge()" style="flex:1">🏆 發布挑戰</button>
+        <button class="btn ghost" onclick="clearSel()" style="flex:1">清除</button>
+      </div>
+    </div>
+    <div class="section-title">牌堆所有卡牌</div>
+    <div id="captainPileList"><div class="empty-state">尚無提交的卡牌</div></div>
+    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--gold)">
+      <div class="section-title" style="font-size:1rem">移交隊長</div>
+      <div id="memberList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- RULES MODAL -->
+<div class="modal-overlay" id="rulesModal">
+  <div class="modal">
+    <div class="modal-title">📖 勇士競技場 規則</div>
+    <div class="rules-section"><h3>🗡 遊戲目標</h3><p>完成每日健身任務，獲得卡牌，與隊伍合力組出最強德州撲克牌型！</p></div>
+    <div class="rules-section"><h3>🃏 每日卡牌</h3><ul><li>每位勇士每天獲得3張隨機卡牌</li><li>每張卡牌對應一個健身動作</li><li>完成動作後，點擊卡牌提交到隊伍牌堆</li><li>每日午夜自動更新新卡牌</li></ul></div>
+    <div class="rules-section"><h3>💪 動作強度</h3><ul><li>2-6：輕鬆（55-70% 體重）</li><li>7-9：中等（70-85%）</li><li>10,J,Q：困難（85-95%）</li><li>K,A：極限（95-100%+）</li></ul></div>
+    <div class="rules-section"><h3>🃏 花色對應動作</h3><ul><li>♠ 黑桃：推胸/肩推系列</li><li>♥ 紅心：深蹲/腿部系列</li><li>♦ 方塊：引體向上/拉背系列</li><li>♣ 梅花：核心/有氧系列</li></ul></div>
+    <div class="rules-section"><h3>👑 隊長職責</h3><ul><li>從隊伍牌堆中選出5張作為今日挑戰牌組</li><li>挑戰牌組依德州撲克規則評分計入排行</li><li>可移交隊長給其他隊員</li></ul></div>
+    <div class="rules-section"><h3>🏆 牌型強弱（由強到弱）</h3><ul><li>皇家同花順 &gt; 同花順 &gt; 四條</li><li>葫蘆 &gt; 同花 &gt; 順子 &gt; 三條</li><li>兩對 &gt; 一對 &gt; 高牌</li></ul></div>
+    <button class="btn full" onclick="closeRules()" style="margin-top:1rem">⚔ 明白了，出發！</button>
+  </div>
+</div>
+
+<!-- TRANSFER MODAL -->
+<div class="modal-overlay" id="transferModal">
+  <div class="modal">
+    <div class="modal-title">🔄 移交隊長</div>
+    <p style="font-size:0.85rem;color:var(--dark2);margin-bottom:1rem">選擇要移交的隊員：</p>
+    <div id="transferList"></div>
+    <button class="btn ghost full" onclick="closeTransfer()" style="margin-top:1rem">取消</button>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://wcemkmwrlvijxxwybrgs.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndjZW1rbXdybHZpanh4d3licmdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUxMzA1NDgsImV4cCI6MjA5MDcwNjU0OH0.Ji557wlvrS7YgflU9ANEm9To6AXLc47EFPaMHTgGARg';
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ── CARD DATA ──
+const SUITS = ['♠','♥','♦','♣'];
+const VALUES = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
+const VR = {'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,'10':10,'J':11,'Q':12,'K':13,'A':14};
+const EXERCISES = {
+  '♠':{icon:'🏋️',moves:{'2':{n:'伏地挺身',d:'8下×3組'},'3':{n:'伏地挺身',d:'10下×3組'},'4':{n:'寬距伏地挺身',d:'10下×3組'},'5':{n:'窄距伏地挺身',d:'8下×3組'},'6':{n:'鑽石伏地挺身',d:'8下×3組'},'7':{n:'推胸',d:'體重×0.7 × 8下×3組'},'8':{n:'推胸',d:'體重×0.8 × 8下×3組'},'9':{n:'肩推',d:'體重×0.5 × 8下×3組'},'10':{n:'上斜推胸',d:'體重×0.7 × 6下×4組'},'J':{n:'強力推胸',d:'體重×0.85 × 5下×4組'},'Q':{n:'爆發推胸',d:'體重×0.9 × 5下×5組'},'K':{n:'最大推胸',d:'體重×0.95 × 3下×5組'},'A':{n:'極限推胸',d:'體重×1.0 × 1下×5組'}}},
+  '♥':{icon:'🦵',moves:{'2':{n:'自重深蹲',d:'15下×3組'},'3':{n:'自重深蹲',d:'20下×3組'},'4':{n:'分腿蹲',d:'每腿10下×3組'},'5':{n:'跳躍深蹲',d:'10下×3組'},'6':{n:'保加利亞蹲',d:'每腿8下×3組'},'7':{n:'深蹲',d:'體重×0.8 × 8下×3組'},'8':{n:'深蹲',d:'體重×0.9 × 8下×3組'},'9':{n:'前蹲',d:'體重×0.7 × 6下×3組'},'10':{n:'深蹲',d:'體重×1.0 × 6下×4組'},'J':{n:'大重量深蹲',d:'體重×1.1 × 5下×4組'},'Q':{n:'爆發深蹲',d:'體重×1.2 × 3下×5組'},'K':{n:'最大深蹲',d:'體重×1.3 × 2下×5組'},'A':{n:'極限深蹲',d:'體重×1.5 × 1下×3組'}}},
+  '♦':{icon:'💪',moves:{'2':{n:'引體向上(輔助)',d:'5下×3組'},'3':{n:'引體向上',d:'5下×3組'},'4':{n:'寬距引體',d:'5下×3組'},'5':{n:'反握引體',d:'6下×3組'},'6':{n:'中立握引體',d:'6下×3組'},'7':{n:'划船',d:'體重×0.6 × 10下×3組'},'8':{n:'T槓划船',d:'體重×0.7 × 8下×3組'},'9':{n:'單手划船',d:'體重×0.4 × 8下×3組'},'10':{n:'引體向上',d:'10下×4組(加重)'},'J':{n:'大重量划船',d:'體重×0.85 × 5下×4組'},'Q':{n:'爆發引體',d:'體重+加重 × 5下×5組'},'K':{n:'最大引體',d:'體重+加重 × 3下×5組'},'A':{n:'極限拉背',d:'體重+加重 × 1下×5組'}}},
+  '♣':{icon:'🔥',moves:{'2':{n:'捲腹',d:'20下×3組'},'3':{n:'平板支撐',d:'30秒×4組'},'4':{n:'登山跑',d:'20下×3組'},'5':{n:'V字起坐',d:'15下×3組'},'6':{n:'俄羅斯轉體',d:'每側15下×3組'},'7':{n:'健腹輪',d:'10下×3組'},'8':{n:'懸掛舉腿',d:'10下×3組'},'9':{n:'波比跳',d:'10下×4組'},'10':{n:'土耳其起立',d:'每側5下×3組'},'J':{n:'健腹輪站立',d:'5下×4組'},'Q':{n:'Dragon Flag',d:'3下×4組'},'K':{n:'人體旗幟練習',d:'5秒保持×4組'},'A':{n:'極限核心',d:'全套10分鐘'}}}
+};
+
+// ── STATE ──
+let CU = null, CT = null, myCards = [], teamPile = [], captainSel = [], lbMode = 'today';
+let realtimeSubs = [];
+
+function today(){ return new Date().toISOString().split('T')[0]; }
+function setMsg(m){ document.getElementById('loadMsg').textContent = m; }
+
+// ── LOGIN ──
+async function handleLogin(){
+  const name = document.getElementById('loginName').value.trim();
+  const phone = document.getElementById('loginPhone').value.trim();
+  if(!name||!phone){ showToast('請填入姓名和手機號碼'); return; }
+  if(phone.length < 8){ showToast('手機號碼格式不正確'); return; }
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '連接中...';
+  showLoader('驗證勇士身份...');
+
+  const { data: existing } = await db.from('wfa_users').select('*').eq('phone', phone).maybeSingle();
+
+  if(existing){
+    CU = existing;
+    await db.from('wfa_users').update({ name }).eq('phone', phone);
+    CU.name = name;
+
+    if(CU.team_id){
+      const { data: team } = await db.from('wfa_teams').select('*').eq('id', CU.team_id).maybeSingle();
+      if(team){ CT = team; await enterGame(); return; }
+    }
+  } else {
+    const { data: newUser } = await db.from('wfa_users').insert({ id: phone, name, phone, team_id: null }).select().single();
+    CU = newUser;
+  }
+
+  btn.disabled = false; btn.textContent = '🗡 進入競技場';
+  hideLoader();
+  document.getElementById('welcomeName').textContent = name;
+  await loadTeamList();
+  showScreen('teamScreen');
+}
+
+async function loadTeamList(){
+  const { data: teams } = await db.from('wfa_teams').select('*').order('created_at');
+  const { data: members } = await db.from('wfa_team_members').select('*');
+  const list = document.getElementById('teamList');
+  if(!teams||!teams.length){ list.innerHTML = '<div class="empty-state">目前尚無隊伍，成為第一位創建者！</div>'; return; }
+  list.innerHTML = teams.map(t => {
+    const cnt = members ? members.filter(m => m.team_id === t.id).length : 0;
+    return `<div class="team-item" onclick="joinTeam('${t.id}')">
+      <div><div style="font-weight:700">🏰 ${t.name}</div><div style="font-size:0.8rem;color:var(--dark2)">隊長：${t.captain_name} · ${cnt}人</div></div>
+      <button class="btn sm">加入</button></div>`;
+  }).join('');
+}
+
+async function joinTeam(teamId){
+  showLoader('加入隊伍中...');
+  await db.from('wfa_team_members').upsert({ team_id: teamId, user_id: CU.id });
+  await db.from('wfa_users').update({ team_id: teamId }).eq('id', CU.id);
+  CU.team_id = teamId;
+  const { data: team } = await db.from('wfa_teams').select('*').eq('id', teamId).single();
+  CT = team;
+  await enterGame();
+}
+
+async function createTeam(){
+  const name = document.getElementById('newTeamName').value.trim();
+  if(!name){ showToast('請輸入隊伍名稱'); return; }
+  const btn = document.getElementById('createTeamBtn');
+  btn.disabled = true;
+  showLoader('創建隊伍中...');
+
+  const teamId = 'team_' + Date.now();
+  await db.from('wfa_teams').insert({ id: teamId, name, captain_id: CU.id, captain_name: CU.name });
+  await db.from('wfa_team_members').insert({ team_id: teamId, user_id: CU.id });
+  await db.from('wfa_users').update({ team_id: teamId }).eq('id', CU.id);
+  CU.team_id = teamId;
+
+  const { data: team } = await db.from('wfa_teams').select('*').eq('id', teamId).single();
+  CT = team;
+  btn.disabled = false;
+  await enterGame();
+}
+
+async function enterGame(){
+  setMsg('生成今日卡牌...');
+  await generateDailyCards();
+  setMsg('載入遊戲資料...');
+  await loadGameData();
+  subscribeRealtime();
+
+  document.getElementById('headerName').textContent = '勇士 ' + CU.name;
+  document.getElementById('headerTeam').textContent = CT ? CT.name : '無隊伍';
+
+  if(CT && CT.captain_id === CU.id){
+    document.getElementById('captainTabBtn').style.display = 'block';
+  }
+
+  showScreen('gameScreen');
+  hideLoader();
+}
+
+// ── CARD GEN ──
+async function generateDailyCards(){
+  const { data: existing } = await db.from('wfa_daily_cards').select('*').eq('user_id', CU.id).eq('date', today()).maybeSingle();
+  if(existing){ myCards = existing.cards; return; }
+
+  const cards = [];
+  const used = new Set();
+  for(let i=0;i<3;i++){
+    let s,v,key;
+    do { s=SUITS[Math.floor(Math.random()*4)]; v=VALUES[Math.floor(Math.random()*13)]; key=s+v; } while(used.has(key));
+    used.add(key);
+    const ex = EXERCISES[s].moves[v];
+    cards.push({ id:key, suit:s, value:v, exercise:{name:ex.n,detail:ex.d}, completed:false, submitted:false });
+  }
+
+  await db.from('wfa_daily_cards').insert({ user_id:CU.id, team_id:CT.id, date:today(), cards });
+  myCards = cards;
+}
+
+async function saveMyCards(){
+  await db.from('wfa_daily_cards').update({ cards: myCards }).eq('user_id', CU.id).eq('date', today());
+}
+
+// ── RENDER ──
+async function loadGameData(){
+  renderMyCards();
+  await loadTeamPile();
+  await loadLeaderboard();
+  await loadTodayChallenge();
+}
+
+function renderMyCards(){
+  const grid = document.getElementById('myCardsGrid');
+  grid.innerHTML = myCards.map((card,i) => {
+    const isRed = card.suit==='♥'||card.suit==='♦';
+    const color = isRed ? 'var(--heart-color)' : 'var(--spade-color)';
+    return `<div class="playing-card ${card.completed?'completed':''} ${card.submitted?'submitted':''}" id="card_${i}" onclick="handleCard(${i})">
+      <div class="card-corner tl" style="color:${color}">${card.suit}${card.value}</div>
+      <div class="card-suit-big">${card.suit}</div>
+      <div class="card-exercise">
+        <div class="exercise-icon">${EXERCISES[card.suit].icon}</div>
+        <div class="exercise-name">${card.exercise.name}</div>
+        <div class="exercise-detail">${card.exercise.detail}</div>
+      </div>
+      <div class="card-corner br" style="color:${color}">${card.suit}${card.value}</div>
+      ${card.submitted?'<div class="card-complete-badge">✓ 已提交</div>':''}
+      ${card.completed&&!card.submitted?'<div class="card-complete-badge" style="background:var(--olive)">✓ 完成！</div>':''}
+    </div>`;
+  }).join('');
+}
+
+async function handleCard(i){
+  const card = myCards[i];
+  if(card.submitted){ showToast('此卡牌已提交'); return; }
+
+  if(!card.completed){
+    card.completed = true;
+    await saveMyCards();
+    renderMyCards();
+    playSound('complete');
+    showToast('✅ 動作完成！再點一次提交到牌堆');
+    return;
+  }
+
+  // Submit
+  const el = document.getElementById('card_'+i);
+  el.classList.add('swipe-up');
+  setTimeout(async () => {
+    card.submitted = true;
+    await saveMyCards();
+    await db.from('wfa_team_pile').insert({
+      team_id: CT.id, date: today(),
+      card_data: card,
+      submitted_by: CU.name,
+      submitted_by_id: CU.id,
+      submitted_at: Date.now()
+    });
+    renderMyCards();
+    playSound('submit');
+    launchFW();
+    showToast('🎉 卡牌提交到隊伍牌堆！');
+  }, 520);
+}
+
+// ── TEAM PILE ──
+async function loadTeamPile(){
+  if(!CT) return;
+  const { data } = await db.from('wfa_team_pile').select('*').eq('team_id', CT.id).eq('date', today()).order('submitted_at');
+  teamPile = data || [];
+  document.getElementById('pileCount').textContent = teamPile.length;
+  renderTeamPile();
+}
+
+function renderTeamPile(){
+  const list = document.getElementById('teamPileList');
+  if(!teamPile.length){ list.innerHTML = '<div class="empty-state">隊員們還沒提交卡牌，一起加油！</div>'; return; }
+  list.innerHTML = teamPile.map(row => {
+    const c = row.card_data;
+    const isRed = c.suit==='♥'||c.suit==='♦';
+    return `<div class="pile-card fade-in">
+      <div class="pile-card-symbol" style="color:${isRed?'var(--heart-color)':'var(--spade-color)'}">${c.suit}${c.value}</div>
+      <div class="pile-card-info"><div class="pile-card-name">${c.exercise.name}</div><div class="pile-card-meta">${c.exercise.detail}</div></div>
+      <div class="pile-card-submitter">${row.submitted_by}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── LEADERBOARD ──
+async function loadLeaderboard(){
+  const { data: teams } = await db.from('wfa_teams').select('*');
+  if(!teams||!teams.length){ document.getElementById('leaderboardList').innerHTML='<div class="empty-state">尚無隊伍</div>'; return; }
+
+  let scores = [];
+  if(lbMode === 'today'){
+    const { data: allPile } = await db.from('wfa_team_pile').select('*').eq('date', today());
+    const { data: challenges } = await db.from('wfa_challenges').select('*').eq('date', today());
+    scores = teams.map(team => {
+      const chal = challenges && challenges.find(c => c.team_id === team.id);
+      const pile = (allPile||[]).filter(p => p.team_id === team.id).map(p => p.card_data);
+      const hand = chal ? chal.cards : pile.slice(0,5);
+      const hr = evalHand(hand);
+      return { team, hand, hr, score: hr.score };
+    });
+  } else {
+    const { data: hist } = await db.from('wfa_score_history').select('*');
+    scores = teams.map(team => {
+      const total = (hist||[]).filter(h => h.team_id === team.id).reduce((s,h) => s+h.score, 0);
+      return { team, hand:[], hr:{name:'累計分數'}, score:total };
+    });
+  }
+
+  scores.sort((a,b) => b.score - a.score);
+
+  // Crown
+  const isMine = scores.length && CT && scores[0].team.id === CT.id;
+  document.getElementById('crownAnim').style.display = isMine ? 'block' : 'none';
+
+  document.getElementById('leaderboardList').innerHTML = scores.map((ts,i) => {
+    const cls = i===0?'gold':i===1?'silver':i===2?'bronze':'other';
+    const ico = i===0?'👑':i===1?'🥈':i===2?'🥉':(i+1);
+    const cardStr = ts.hand.map(c => { const r=c.suit==='♥'||c.suit==='♦'; return `<span style="color:${r?'var(--heart-color)':'var(--spade-color)'}">${c.suit}${c.value}</span>`; }).join(' ');
+    const mine = CT && ts.team.id === CT.id;
+    return `<div class="rank-item ${mine?'':''}">
+      <div class="rank-num ${cls}">${ico}</div>
+      <div class="rank-info">
+        <div class="rank-team">${ts.team.name}${mine?' (我的隊伍)':''}</div>
+        <div class="rank-hand">${ts.hr.name} · ${ts.score}分</div>
+      </div>
+      <div class="rank-cards">${cardStr}</div>
+    </div>`;
+  }).join('');
+}
+
+function switchLeaderboard(m){
+  lbMode = m;
+  document.getElementById('todayRankBtn').className = m==='today'?'btn sm':'btn sm ghost';
+  document.getElementById('totalRankBtn').className = m==='total'?'btn sm':'btn sm ghost';
+  loadLeaderboard();
+}
+
+// ── CHALLENGE ──
+async function loadTodayChallenge(){
+  if(!CT) return;
+  const { data: chal } = await db.from('wfa_challenges').select('*').eq('team_id', CT.id).eq('date', today()).maybeSingle();
+  const sec = document.getElementById('todayChallengeSection');
+  if(chal && chal.cards.length){
+    sec.style.display = 'block';
+    document.getElementById('challengeHandDisplay').innerHTML = chal.cards.map(c => {
+      const r=c.suit==='♥'||c.suit==='♦';
+      return `<div class="challenge-card" style="color:${r?'var(--heart-color)':'var(--spade-color)'}">${c.suit}${c.value}</div>`;
+    }).join('');
+    const hr = evalHand(chal.cards);
+    document.getElementById('challengeHandRank').textContent = `牌型：${hr.name}（${hr.score}分）`;
+  } else {
+    sec.style.display = 'none';
+  }
+}
+
+// ── CAPTAIN ──
+async function renderCaptainPanel(){
+  await loadTeamPile();
+  captainSel = captainSel.filter(s => teamPile.some(p => p.card_data.id === s.id));
+
+  const list = document.getElementById('captainPileList');
+  if(!teamPile.length){ list.innerHTML='<div class="empty-state">尚無卡牌</div>'; updateCapSel(); return; }
+  list.innerHTML = teamPile.map((row,i) => {
+    const c = row.card_data;
+    const isRed = c.suit==='♥'||c.suit==='♦';
+    const sel = captainSel.some(s => s.id===c.id);
+    return `<div class="pile-card" style="${sel?'background:rgba(184,134,11,0.2);border-color:var(--gold);':''}" onclick="toggleCapCard(${i})">
+      <div class="pile-card-symbol" style="color:${isRed?'var(--heart-color)':'var(--spade-color)'}">${c.suit}${c.value}</div>
+      <div class="pile-card-info"><div class="pile-card-name">${c.exercise.name}</div><div class="pile-card-meta">${row.submitted_by}</div></div>
+      ${sel?'<div style="color:var(--gold);font-size:1.3rem;font-weight:700">✓</div>':''}
+    </div>`;
+  }).join('');
+
+  updateCapSel();
+
+  // Members
+  const { data: members } = await db.from('wfa_team_members').select('*').eq('team_id', CT.id);
+  const { data: users } = await db.from('wfa_users').select('*').in('id', members.map(m=>m.user_id));
+  const others = users.filter(u => u.id !== CU.id);
+  document.getElementById('memberList').innerHTML = others.length
+    ? others.map(u => `<div class="member-item"><span>${u.name}</span><button class="btn sm red" onclick="transferCap('${u.id}','${u.name}')">任命隊長</button></div>`).join('')
+    : '<div class="empty-state">隊伍目前只有你一人</div>';
+}
+
+function toggleCapCard(i){
+  const c = teamPile[i].card_data;
+  const idx = captainSel.findIndex(s => s.id===c.id);
+  if(idx>=0){ captainSel.splice(idx,1); }
+  else { if(captainSel.length>=5){ showToast('最多選5張'); return; } captainSel.push(c); }
+  renderCaptainPanel();
+}
+
+function updateCapSel(){
+  document.getElementById('selCount').textContent = captainSel.length;
+  const d = document.getElementById('captainSelDisplay');
+  d.innerHTML = captainSel.map(c => {
+    const r=c.suit==='♥'||c.suit==='♦';
+    return `<div class="mini-card selected" style="color:${r?'var(--heart-color)':'var(--spade-color)'}">${c.suit}${c.value}</div>`;
+  }).join('');
+  const hr = evalHand(captainSel);
+  const ri = document.getElementById('captainHandRank');
+  if(captainSel.length){ ri.style.display='block'; ri.textContent=`目前牌型：${hr.name}（${hr.score}分）`; }
+  else ri.style.display='none';
+}
+
+function clearSel(){ captainSel=[]; renderCaptainPanel(); }
+
+async function setTodayChallenge(){
+  if(!captainSel.length){ showToast('請先選擇卡牌'); return; }
+  const hr = evalHand(captainSel);
+  await db.from('wfa_challenges').upsert({ team_id:CT.id, date:today(), cards:captainSel, set_by:CU.name, hand_name:hr.name, score:hr.score });
+  await db.from('wfa_score_history').upsert({ team_id:CT.id, team_name:CT.name, date:today(), hand_name:hr.name, score:hr.score });
+  showToast(`🏆 挑戰牌組發布！${hr.name}`);
+  await loadTodayChallenge();
+  await loadLeaderboard();
+  launchFW();
+}
+
+async function transferCap(newId, newName){
+  await db.from('wfa_teams').update({ captain_id:newId, captain_name:newName }).eq('id', CT.id);
+  CT.captain_id = newId; CT.captain_name = newName;
+  document.getElementById('captainTabBtn').style.display='none';
+  switchTab('myCards');
+  showToast(`👑 已移交隊長給 ${newName}`);
+  closeTransfer();
+}
+
+function showTransferCaptain(){ renderCaptainPanel(); document.getElementById('transferModal').classList.add('active'); }
+function closeTransfer(){ document.getElementById('transferModal').classList.remove('active'); }
+
+// ── REALTIME ──
+function subscribeRealtime(){
+  realtimeSubs.forEach(s => db.removeChannel(s));
+  realtimeSubs = [];
+
+  // Pile changes
+  const pileSub = db.channel('pile_'+CT.id)
+    .on('postgres_changes',{ event:'INSERT', schema:'public', table:'wfa_team_pile', filter:`team_id=eq.${CT.id}` }, async () => {
+      await loadTeamPile();
+      if(document.getElementById('tab-captain').classList.contains('active')) renderCaptainPanel();
+    }).subscribe();
+
+  // Challenge changes
+  const chalSub = db.channel('chal_'+CT.id)
+    .on('postgres_changes',{ event:'*', schema:'public', table:'wfa_challenges', filter:`team_id=eq.${CT.id}` }, async () => {
+      await loadTodayChallenge();
+      await loadLeaderboard();
+    }).subscribe();
+
+  // Team changes (captain transfer)
+  const teamSub = db.channel('team_'+CT.id)
+    .on('postgres_changes',{ event:'UPDATE', schema:'public', table:'wfa_teams', filter:`id=eq.${CT.id}` }, async (payload) => {
+      CT = payload.new;
+      if(CT.captain_id === CU.id) document.getElementById('captainTabBtn').style.display='block';
+      else document.getElementById('captainTabBtn').style.display='none';
+    }).subscribe();
+
+  realtimeSubs = [pileSub, chalSub, teamSub];
+}
+
+// ── POKER EVAL ──
+function evalHand(cards){
+  if(!cards||!cards.length) return {name:'無牌型',score:0};
+  const vals = cards.map(c => VR[c.value]||parseInt(c.value)).sort((a,b)=>b-a);
+  const suits = cards.map(c => c.suit);
+  const isFlush = cards.length>=5 && suits.every(s=>s===suits[0]);
+  const isStraight = cards.length>=5 && (() => {
+    const s=[...vals].sort((a,b)=>a-b); for(let i=1;i<s.length;i++) if(s[i]-s[i-1]!==1) return false; return true;
+  })();
+  const cnt={}; vals.forEach(v=>cnt[v]=(cnt[v]||0)+1);
+  const g=Object.values(cnt).sort((a,b)=>b-a);
+  const mx=Math.max(...vals);
+  if(isFlush&&isStraight&&mx===14) return {name:'皇家同花順 🔥',score:9000+mx};
+  if(isFlush&&isStraight) return {name:'同花順',score:8000+mx};
+  if(g[0]===4) return {name:'四條',score:7000+mx};
+  if(g[0]===3&&g[1]===2) return {name:'葫蘆',score:6000+mx};
+  if(isFlush) return {name:'同花',score:5000+mx};
+  if(isStraight) return {name:'順子',score:4000+mx};
+  if(g[0]===3) return {name:'三條',score:3000+mx};
+  if(g[0]===2&&g[1]===2) return {name:'兩對',score:2000+mx};
+  if(g[0]===2) return {name:'一對',score:1000+mx};
+  return {name:'高牌 '+({11:'J',12:'Q',13:'K',14:'A'}[mx]||mx),score:100+mx};
+}
+
+// ── UI HELPERS ──
+function showScreen(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function showLoader(msg){ document.getElementById('loadOverlay').classList.remove('out'); document.getElementById('loadOverlay').style.display='flex'; if(msg) setMsg(msg); }
+function hideLoader(){ const o=document.getElementById('loadOverlay'); o.classList.add('out'); setTimeout(()=>o.style.display='none',600); }
+
+function switchTab(name){
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  const tabs=['myCards','teamPile','leaderboard','captain'];
+  const visible=['myCards','teamPile','leaderboard'];
+  if(CT&&CT.captain_id===CU.id) visible.push('captain');
+  const idx=visible.indexOf(name);
+  const btns=document.querySelectorAll('.nav-tab');
+  if(idx>=0&&btns[idx]) btns[idx].classList.add('active');
+  const c=document.getElementById('tab-'+name);
+  if(c) c.classList.add('active');
+  if(name==='teamPile') loadTeamPile();
+  if(name==='leaderboard') loadLeaderboard();
+  if(name==='captain') renderCaptainPanel();
+}
+
+async function refreshAll(){ await loadGameData(); showToast('🔄 已更新'); }
+
+function logout(){
+  realtimeSubs.forEach(s=>db.removeChannel(s));
+  CU=null; CT=null; myCards=[]; teamPile=[]; captainSel=[];
+  document.getElementById('captainTabBtn').style.display='none';
+  document.getElementById('crownAnim').style.display='none';
+  showScreen('loginScreen');
+}
+
+function showRules(){ document.getElementById('rulesModal').classList.add('active'); }
+function closeRules(){ document.getElementById('rulesModal').classList.remove('active'); }
+
+function showToast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ── FIREWORKS ──
+const fc=document.getElementById('fw-canvas');
+const fx=fc.getContext('2d');
+let parts=[];
+function resizeFW(){ fc.width=innerWidth; fc.height=innerHeight; }
+resizeFW(); addEventListener('resize',resizeFW);
+function launchFW(){
+  const cols=['#c0392b','#e8635a','#2c3e7a','#3a50a0','#f5f0e8','#1c1c1c'];
+  for(let i=0;i<100;i++){
+    const a=(Math.PI*2/100)*i, sp=Math.random()*7+2;
+    parts.push({ x:Math.random()*fc.width, y:Math.random()*fc.height*0.5, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp, life:1, color:cols[Math.floor(Math.random()*cols.length)], size:Math.random()*4+1 });
+  }
+  requestAnimationFrame(animFW);
+}
+function animFW(){
+  fx.clearRect(0,0,fc.width,fc.height);
+  parts=parts.filter(p=>p.life>0);
+  parts.forEach(p=>{ p.x+=p.vx; p.y+=p.vy; p.vy+=0.15; p.life-=0.018; fx.globalAlpha=p.life; fx.fillStyle=p.color; fx.beginPath(); fx.arc(p.x,p.y,p.size,0,Math.PI*2); fx.fill(); });
+  fx.globalAlpha=1;
+  if(parts.length) requestAnimationFrame(animFW);
+}
+
+// ── AUDIO ──
+let actx;
+function getAC(){ if(!actx) actx=new(window.AudioContext||window.webkitAudioContext)(); return actx; }
+function playSound(t){
+  try {
+    const c=getAC(), o=c.createOscillator(), g=c.createGain();
+    o.connect(g); g.connect(c.destination);
+    if(t==='complete'){ o.frequency.setValueAtTime(440,c.currentTime); o.frequency.exponentialRampToValueAtTime(880,c.currentTime+0.12); g.gain.setValueAtTime(0.3,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.3); o.start(); o.stop(c.currentTime+0.3); }
+    else if(t==='submit'){ o.type='triangle'; [523,659,784].forEach((f,i)=>o.frequency.setValueAtTime(f,c.currentTime+i*0.1)); g.gain.setValueAtTime(0.4,c.currentTime); g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+0.5); o.start(); o.stop(c.currentTime+0.5); }
+  } catch(e){}
+}
+
+// Init
+window.addEventListener('load', () => setTimeout(hideLoader, 400));
+</script>
+</body>
+</html>
