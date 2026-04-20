@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>⛩ 勇士競技場</title>
+<title>艋友翻卡啦</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Caveat:wght@400;700&family=Ma+Shan+Zheng&display=swap');
@@ -48,13 +48,14 @@ body {
 #loginScreen { align-items:center; justify-content:center; padding:2rem 1rem; }
 .main-title {
   font-family:'Ma Shan Zheng',cursive;
-  font-size:2.8rem; color:var(--gold);
+  font-size:2.6rem; color:var(--gold);
   text-shadow:2px 2px 0 #888,-1px -1px 0 #c0392b;
-  line-height:1.2; letter-spacing:0.1em; text-align:center;
+  line-height:1.2; letter-spacing:0.05em; text-align:center;
+  white-space:nowrap;
 }
 .sub-title {
-  font-family:'Caveat',cursive; font-size:1.1rem;
-  color:#2c3e7a; margin-top:0.5rem; letter-spacing:0.2em; text-align:center;
+  font-family:'Caveat',cursive; font-size:1rem;
+  color:#2c3e7a; margin-top:0.4rem; letter-spacing:0.18em; text-align:center;
 }
 .tagline {
   background:linear-gradient(135deg,#1c1c1c,#c0392b);
@@ -69,9 +70,11 @@ body {
   position:relative;
 }
 .login-box::before {
-  content:'⛩'; position:absolute; top:-18px; left:50%;
-  transform:translateX(-50%); background:var(--bg);
-  padding:0 8px; font-size:1.5rem; color:var(--red);
+  content:''; display:none;
+}
+.login-box-icon {
+  position:absolute; top:-22px; left:50%; transform:translateX(-50%);
+  background:var(--bg); padding:0 10px; line-height:1;
 }
 .form-group { margin-bottom:1.2rem; }
 .form-group label { display:block; font-size:0.9rem; color:var(--dark2); margin-bottom:0.4rem; font-weight:700; }
@@ -243,7 +246,7 @@ body {
 <div class="toast" id="toast"></div>
 
 <div class="load-overlay" id="loadOverlay">
-  <div class="load-title">⛩ 勇士競技場 ⛩</div>
+  <div class="load-title">艋友翻卡啦</div>
   <div class="load-spinner"></div>
   <div class="load-subtitle" id="loadMsg">正在連接競技場...</div>
 </div>
@@ -251,8 +254,8 @@ body {
 <!-- LOGIN -->
 <div class="screen active" id="loginScreen">
   <div style="width:100%;max-width:420px;margin:0 auto;padding:2rem 1rem;">
-    <div style="margin-bottom:1.5rem;">
-      <div class="main-title">⛩ 勇士競技場 ⛩</div>
+    <div style="margin-bottom:1.5rem;text-align:center;">
+      <div class="main-title">艋友翻卡啦</div>
       <div class="sub-title">WARRIOR FITNESS ARENA</div>
     </div>
     <div class="tagline">
@@ -261,6 +264,15 @@ body {
       唯有強壯的你，能守護這片土地。
     </div>
     <div class="login-box">
+      <div class="login-box-icon">
+        <svg width="44" height="22" viewBox="0 0 44 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="7" width="6" height="8" rx="2" fill="#c0392b"/>
+          <rect x="6" y="4" width="4" height="14" rx="2" fill="#1c1c1c"/>
+          <rect x="10" y="9" width="24" height="4" rx="2" fill="#1c1c1c"/>
+          <rect x="34" y="4" width="4" height="14" rx="2" fill="#1c1c1c"/>
+          <rect x="38" y="7" width="6" height="8" rx="2" fill="#c0392b"/>
+        </svg>
+      </div>
       <div class="form-group">
         <label>⚔ 勇士稱號（姓名）</label>
         <input type="text" id="loginName" placeholder="輸入你的名字" maxlength="20">
